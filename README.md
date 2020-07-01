@@ -1,0 +1,1 @@
+Golang implements [Redlock](https://redis.io/topics/distlock)
