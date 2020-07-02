@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"sync"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -9,27 +9,25 @@ import (
 )
 
 func main() {
-	redisClients := []*redis.Client{}
-	c := redis.NewClient(&redis.Options{
+
+	dml := redlock.New(redis.NewClient(&redis.Options{
 		Addr: ":6379",
-	})
-	redisClients = append(redisClients, c)
-	c = redis.NewClient(&redis.Options{
+	}), redis.NewClient(&redis.Options{
 		Addr: ":6380",
-	})
-	redisClients = append(redisClients, c)
-	c.Close()
-
-	c = redis.NewClient(&redis.Options{
+	}), redis.NewClient(&redis.Options{
 		Addr: ":6381",
-	})
-	redisClients = append(redisClients, c)
+	}))
 
-	dml := redlock.New(redisClients)
-	dml.Lock("lock", 1000*20)
-	time.Sleep(time.Second * 20)
-	res := dml.Unlock("lock")
-	if !res {
-		fmt.Println("解锁失败")
+	var wg sync.WaitGroup
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		go func() {
+			if mylock, ok := dml.Lock("foo", 50); ok {
+				time.Sleep(time.Millisecond * 40)
+				dml.Unlock(mylock)
+			}
+			defer wg.Done()
+		}()
 	}
+	wg.Wait()
 }
