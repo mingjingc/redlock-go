@@ -98,12 +98,9 @@ var resetLockTTLScript = `
 func (r *RedLock) unlockInstance(resource string, val interface{}) bool {
 	success := true
 	for _, redisClient := range r.redisClients {
-		res, err := redisClient.Eval(deleteLockScript, []string{resource}, val).Result()
+		_, err := redisClient.Eval(deleteLockScript, []string{resource}, val).Result()
 		if err != nil {
 			log.Printf("unlock %s instance failed in %s", resource, redisClient.Options().Addr)
-			success = false
-		}
-		if res == 0 {
 			success = false
 		}
 	}

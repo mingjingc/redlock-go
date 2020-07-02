@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-
 	dml := redlock.New(redis.NewClient(&redis.Options{
 		Addr: ":6379",
 	}), redis.NewClient(&redis.Options{
