@@ -128,6 +128,10 @@ func (r *RedLock) ResetTTL(lock LockIfnfo, ttl int64) bool {
 			n++
 		}
 	}
+	if n < r.quorum {
+		r.Unlock(lock)
+		return false
+	}
 	return n >= r.quorum
 }
 
